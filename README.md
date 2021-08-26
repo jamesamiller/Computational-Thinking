@@ -6,7 +6,7 @@ This material is being developed for a [UAH College of Science](https://www.uah.
 
 We want to give incoming STEM students
 
-- an introduction into how computation and experiments on a computer can clarify their understanding of difficult concepts such as probability, differential equations,and xxx
+- an introduction into how computation and experiments on a computer can clarify their understanding of difficult general concepts such as probability and statistics, differential equations, and xxx
 - an idea of how modeling can lead to a better understanding of a complex phenomena and lead to predictions of future behavior.
 - an introduction to a few important physical and mathematical ideas
 - a taste of programming language that will be of use to them during their college career and beyond.
@@ -25,10 +25,13 @@ The MIT course [Introduction to Computational Thinking](https://computationalthi
 2. Synchronous and asynchronous online delivery
 4. Computational tool
     1. Julia
-    2. Needed language elements introduced in the context of an actual problem. This is not a programming class.
-    3. Tentative: given the different platforms students have, we will likely use an online IDE such as [JuliaHub](https://juliahub.com/lp/)
+    2. Needed language elements introduced in the context of an actual problem 
+    3. Not a programming class
+    4. Tentative: given the different platforms students have, we will likely use an online IDE such as [JuliaHub](https://juliahub.com/lp/)
 5. Assignments 
     1. Check understanding of the material and language elements
     2. We will have synchronous online assignment help sessions
+
+## Units
 
 
