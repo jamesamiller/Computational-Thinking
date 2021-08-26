@@ -19,16 +19,16 @@ The MIT course [Introduction to Computational Thinking](https://computationalthi
 
 1. Course divided into *units*, each dealing with a self contained topic of general interest in physics, biology, atmospheric science, and perhaps other STEM areas
 2. Prerequisites
-    1. High school algebra
-    2. No calculus
-    3. High school science
+    a. High school algebra
+    b. No calculus
+    c. High school science
 2. Synchronous and asynchronous online delivery
 4. Computational tool
-    1. Julia
-    2. Needed language elements introduced in the context of an actual problem. This is not a programming class.
-    3. Tentative: given the different platforms students have, we will likely use an online IDE such as [JuliaHub](https://juliahub.com/lp/)
+    a. Julia
+    b. Needed language elements introduced in the context of an actual problem. This is not a programming class.
+    c. Tentative: given the different platforms students have, we will likely use an online IDE such as [JuliaHub](https://juliahub.com/lp/)
 5. Assignments 
-    1. Check understanding of the material and language elements
-    2. We will have synchronous online assignment help sessions
+    a. Check understanding of the material and language elements
+    b. We will have synchronous online assignment help sessions
 
 
