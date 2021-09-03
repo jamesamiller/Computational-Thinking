@@ -1,15 +1,15 @@
 # Computational Thinking Course
 
-This material is being developed for a [UAH College of Science](https://www.uah.edu/science) short summer course on **computational thinking** for pre-freshman students. A production version will appear in another repository.
+This material is being developed for a [UAH College of Science](https://www.uah.edu/science) short summer course on **computational thinking** for pre-freshman students. 
 
 ## Motivation
 
 We want to give incoming STEM students
 
-- an introduction into how computation and experiments on a computer can clarify their understanding of difficult general concepts such as probability and statistics, differential equations, and xxx
-- an idea of how modeling can lead to a better understanding of a complex phenomena and lead to predictions of future behavior.
-- an introduction to a few important physical and mathematical ideas
-- a taste of programming language that will be of use to them during their college career and beyond.
+- an introduction into how computer experiments can clarify their understanding of difficult concepts, such as probability and statistics and differential equations.
+- an idea of how modeling can lead to a better understanding of a complex physical phenomena.
+- an introduction to some important physical and mathematical ideas.
+- a taste of a programming language that will be of use to them during their college career and beyond.
 
 ## Inspiration
 
@@ -17,21 +17,31 @@ The MIT course [Introduction to Computational Thinking](https://computationalthi
 
 ## Course Design Principles
 
-1. Course divided into *units*, each dealing with a self contained topic of general interest in physics, biology, atmospheric science, and perhaps other STEM areas
-2. Prerequisites
-    1. High school algebra
+1. Course divided into *units*, each dealing with a self contained topic of *general interest* in physics, biology, atmospheric science, and perhaps other STEM areas
+2. Units should not be esoteric or filled with jargon
+3. Prerequisites
+    1. High school algebra and trig
     2. No calculus
     3. High school science
-2. Synchronous and asynchronous online delivery
-4. Computational tool
+4. Synchronous and asynchronous online delivery
+5. Computational tool
     1. Julia
-    2. Needed language elements introduced in the context of an actual problem 
+    2. Language elements introduced in the context of an actual problem 
     3. Not a programming class
-    4. Tentative: given the different platforms students have, we will likely use an online IDE such as [JuliaHub](https://juliahub.com/lp/)
-5. Assignments 
+    4. Tentative: We will likely use an online IDE such as [JuliaHub](https://juliahub.com/lp/) for ease of use across platforms
+6. Assignments 
     1. Check understanding of the material and language elements
     2. We will have synchronous online assignment help sessions
 
-## Units
+## Notebook Design Principles
+
+1. Self contained
+    1. Text/descriptions need not be exhaustive, since they will be supplemented by instructor commentary
+    2. Important background, motivation, and theory should be fairly complete and readable ahead of time
+    3. Should include short questions. Answers given during class and added to a "live" version of the notebook
+2. A "live" version with instructor commentary and further additions will be worked on during class and posted after
+3. *A notebook corresponds to a one-hour class*
+4. Packages should be noted and pre-loaded in Julia
+5. Package `using` commands included first in the notebook
 
 
