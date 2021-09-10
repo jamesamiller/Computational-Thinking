@@ -16,24 +16,24 @@ PlutoUI.TableOfContents(aside=true)
 
 # ╔═╡ 89f1748e-593f-473f-907d-b3a64073e197
 md"""
-## Physics and *numerical* concepts
+## Physics and math concepts
 
 - Free fall
 - Air friction
 - Terminal speed
-- *Midpoint method*
+- Ordinary differential equations (ODEs)
 
 """
 
 # ╔═╡ f878dcc5-06db-4dd4-8df8-c4666cf8f605
 md"""
-## Julia and *general programming* concepts
+## Julia and numerical concepts
 
 - Array comprehension
 - Broadcasting
 - Plotting, using `Plots` package
 - Function arguments and keywords
-- *Code re-use*
+- Euler and midpoint methods for ODEs
 """
 
 # ╔═╡ f5e86f2a-076d-11ec-1080-c341c92d3fd1
@@ -114,7 +114,9 @@ Let's now apply some computational thinking to explore this physical situation.
 
 # ╔═╡ fcba2327-2306-4fc3-bb70-14e94e5d55c5
 md"""
-Define function to calculate the speed increment for falling under gravity. And define a function to find the distance increment given a speed increment (using two approaches).
+Finding the speed increment is not an issue. But the distance increment poses a problem, since the speed *changes* during the increment. We can think immediately of two approaches: 
+- use the average speed at the start of the increment
+- use the initial speed
 """
 
 # ╔═╡ 809e639a-8492-4b0a-bc98-2226c2404478
@@ -123,20 +125,27 @@ function Δv_grav(Δt, a=10.0)
 end
 
 # ╔═╡ dd4a6136-75a7-460d-9bbc-97a374e23a4f
-function Δz_v_ave(v₀, Δt, Δv::Function)
+function Δz(v₀, Δt, Δv::Function)
 	v_ave = ( v₀ + (v₀ + Δv(Δt)) )/2
 	v_ave*Δt
 end
 
 # ╔═╡ c90cceb1-5f04-46e5-8879-da29516ea81f
-function Δz_v_init(v₀, Δt, Δv::Function)
+function Δz(v₀, Δt)
 	v_init = v₀ 
 	v_init*Δt
 end
 
+# ╔═╡ 52671566-39e8-4849-b27d-669f6bdb49db
+md"""
+>Question: What magic is going on with the definition of Δz?
+>
+>Answer: This is an example of **multiple dispatch**, a centerpiece of Julia.
+"""
+
 # ╔═╡ 453ad11f-7bed-49f7-8255-6b4e7a86ae57
 md"""
-We can now calculate things. Our strategy will be **discretize** time. This means we will calculate quantities only at set time values. This is a common thing to do in computation, since we cannot find quantities at infinitely many points infinitely close together. And this is likely not useful even we could.
+Our strategy will be **discretize** time. This means we will calculate quantities only at set time values. This is a common thing to do in computation, since we cannot find quantities at infinitely many points infinitely close together. And this is likely not useful even we could.
 
 It's natural to start things at zero time. We can then find the **time grid** given the time interval ``\Delta t`` and the number of time points we want to consider. 
 """
@@ -144,7 +153,7 @@ It's natural to start things at zero time. We can then find the **time grid** gi
 # ╔═╡ 0e324d7d-932a-41a5-b4e8-924286ed6878
 begin
 	Δt = 0.2
-	t = [n*Δt for n in 0:100]
+	t = [n*Δt for n in 0:10]
 end
 
 # ╔═╡ bf58c0d6-1c31-4fcc-b9e6-72058c79d79a
@@ -156,33 +165,25 @@ Speed and distance fallen will be determined at these time grid points, and they
 begin
 	v = similar(t)
 	z = similar(t)
-	v[1] = 0.0
-	z[1] = 0.0
+	v[1] = 0.0    # initial speed
+	z[1] = 0.0    # initial location
+	
+	z_ave = similar(z)
+	z_init = similar(z)
 end
 
-# ╔═╡ f4cda5a7-5a6b-4a1e-ba36-e2d5dbacd4fa
+# ╔═╡ de13ad92-d15f-450a-9388-4e765c29ea66
 md"""
-Function to step through time and find the speed and distance at each point. We have set what they are initially, so start at the second point.
+Step through the time grid and get the speed and the distance fallen up to that time (using the two methods). We know what they are initially, so start at second grip point.
 """
 
-# ╔═╡ 335fdae6-51ee-465e-9d1e-0408b58a1217
-function v_z_update!(v, z, Δt, Δv::Function, Δz::Function)
-	for i in 2:length(v)
-		v[i] = v[i-1] + Δv(Δt)
-		z[i] = z[i-1] + Δz(v[i-1], Δt, Δv)
-	end	
+# ╔═╡ e59e1646-d949-456d-8e28-a4f9e1f55a8a
+for i in 2:length(v)
+	v[i] = v[i-1] + Δv_grav(Δt)
+	z_init[i] = z_init[i-1] + Δz(v[i-1], Δt)
+	z_ave[i] = z_ave[i-1] + Δz(v[i-1], Δt, Δv_grav)
 end
 
-# ╔═╡ 4a0e6dd7-acc3-410b-83aa-ce18964cc0e6
-md"""
-First calculate the speed and distance fallen using the *average* speed in a time increment.
-"""
-
-# ╔═╡ 335d5dc5-2921-43d9-b605-004c465fce7b
-begin
-	v_z_update!(v, z, Δt, Δv_grav, Δz_v_ave)
-	z_v_ave = copy(z)		# keep this z safe for later
-end
 
 # ╔═╡ 421f19c1-38eb-4cff-b8d4-7a6ae4f438d0
 md"""
@@ -193,11 +194,21 @@ md"""
 v
 
 # ╔═╡ becfff3a-b130-44e8-8f9b-f63d693fdc0d
-z
+z_init
+
+# ╔═╡ 20e80196-d302-44ad-af58-c2c6211bcc95
+z_ave
+
+# ╔═╡ 202922e8-9d1a-4a23-afdc-f91deceb899e
+md"""
+>Question: Anything strange here?
+>
+>Answer:
+"""
 
 # ╔═╡ d98ad456-1f29-4047-8724-78a8cb35187a
 md"""
-Now show the plots.
+Plot speed as a function of time.
 """
 
 # ╔═╡ bafa445a-f3c8-4e83-bfa7-2b907bd33319
@@ -206,33 +217,15 @@ begin
 	plot!(title="speed vs time",xlabel="time [s]",ylabel="speed [m/s]")
 end
 
-# ╔═╡ 04fff684-4195-49a3-8a0e-3b8e282d59f9
-md"""
-Distance fallen using the *starting* speed in an increment.
-"""
-
-# ╔═╡ a0888e39-6003-40fd-bcda-96924142a328
-begin
-	v_z_update!(v, z, Δt, Δv_grav, Δz_v_init)
-	z_v_init = copy(z)		# keep this z safe for later
-end
-
-# ╔═╡ 018dfe86-de97-4330-8734-4a18ab5abe2c
-md"""
->Question: Anything strange here?
->
->Answer:
-"""
-
 # ╔═╡ 1d0dab51-947d-40f6-a38b-6bf54b1595cf
 md"""
-Compare our two approaches. Now, we know the exact result: 
+Now look at distance, and compare our two approaches. We also know the exact result 
 
 ```math
 z(t) = z_0 + v_0 t + \frac{1}{2} g t^2
 ```
 
-Show that too for comparison.
+and show that for comparison.
 """
 
 # ╔═╡ 2f305768-1b2b-4939-926e-dee480da23f1
@@ -240,20 +233,27 @@ function z_exact(z₀, v₀, t, a=10.0)
 		z₀ + v₀*t + a*t^2 / 2
 end
 
-# ╔═╡ 15bf0e04-9996-4c03-ae80-2e1df0151c85
-z_exact.(z[1],v[1],t)
-
-# ╔═╡ 1b1927ca-f7e8-419c-bef1-13168c7a8848
+# ╔═╡ 6afbfcf5-d0ed-484a-85df-9629f9d731f4
 begin
-	plot(t,z_v_init,label="init")
-	plot!(t,z_v_ave,label="ave")
-	plot!(t,z_exact.(z[1],v[1],t),label="exact")
+	plot(t, z_init, label="init")
+	plot!(t, z_ave, label="ave")
+	plot!(t, z_exact.(z[1],v[1],t),label="exact")
 	plot!(title="distance vs time",xlabel="time [s]",ylabel="distance [m]")
 end
 
+# ╔═╡ 2bfc8a93-4dc6-4c44-8df9-41866e52a681
+md"""
+>Question: What magic is happening in the plot command for the exact results?
+>
+>Answer: This is called **broadcasting**.
+"""
+
+# ╔═╡ 15bf0e04-9996-4c03-ae80-2e1df0151c85
+z_exact.(z[1],v[1],t)
+
 # ╔═╡ a9409040-77ea-442f-89c5-a5f7636b3e56
 md"""
->Question: Which approach is seems the best? Experiment with decreasing ``\Delta t`` (and increasing the number of grid points to keep the final time the same). What happens? 
+>Question: Which approach for calculating the distance is the best? Experiment with decreasing ``\Delta t`` (and increasing the number of grid points to keep the final time the same). What happens? 
 >
 >Answer:
 """
@@ -1196,30 +1196,29 @@ version = "0.9.1+5"
 # ╟─a3e1ba79-2f26-4ceb-b32d-457d9eef5ef9
 # ╟─fe7c9f07-10c7-4aa3-b303-211da17ec695
 # ╟─6e215ec5-dafb-4eb0-a159-b9028d6de08d
-# ╠═fcba2327-2306-4fc3-bb70-14e94e5d55c5
+# ╟─fcba2327-2306-4fc3-bb70-14e94e5d55c5
 # ╠═809e639a-8492-4b0a-bc98-2226c2404478
 # ╠═dd4a6136-75a7-460d-9bbc-97a374e23a4f
 # ╠═c90cceb1-5f04-46e5-8879-da29516ea81f
+# ╟─52671566-39e8-4849-b27d-669f6bdb49db
 # ╟─453ad11f-7bed-49f7-8255-6b4e7a86ae57
 # ╠═0e324d7d-932a-41a5-b4e8-924286ed6878
 # ╟─bf58c0d6-1c31-4fcc-b9e6-72058c79d79a
 # ╠═cc9737b7-33ee-48c4-9cbd-dde3f9b28afc
-# ╟─f4cda5a7-5a6b-4a1e-ba36-e2d5dbacd4fa
-# ╠═335fdae6-51ee-465e-9d1e-0408b58a1217
-# ╟─4a0e6dd7-acc3-410b-83aa-ce18964cc0e6
-# ╠═335d5dc5-2921-43d9-b605-004c465fce7b
+# ╟─de13ad92-d15f-450a-9388-4e765c29ea66
+# ╠═e59e1646-d949-456d-8e28-a4f9e1f55a8a
 # ╟─421f19c1-38eb-4cff-b8d4-7a6ae4f438d0
 # ╠═a87dd44d-89ca-41cc-b077-d444ea37c48d
 # ╠═becfff3a-b130-44e8-8f9b-f63d693fdc0d
+# ╠═20e80196-d302-44ad-af58-c2c6211bcc95
+# ╟─202922e8-9d1a-4a23-afdc-f91deceb899e
 # ╟─d98ad456-1f29-4047-8724-78a8cb35187a
 # ╠═bafa445a-f3c8-4e83-bfa7-2b907bd33319
-# ╟─04fff684-4195-49a3-8a0e-3b8e282d59f9
-# ╠═a0888e39-6003-40fd-bcda-96924142a328
-# ╟─018dfe86-de97-4330-8734-4a18ab5abe2c
 # ╟─1d0dab51-947d-40f6-a38b-6bf54b1595cf
 # ╠═2f305768-1b2b-4939-926e-dee480da23f1
+# ╠═6afbfcf5-d0ed-484a-85df-9629f9d731f4
+# ╟─2bfc8a93-4dc6-4c44-8df9-41866e52a681
 # ╠═15bf0e04-9996-4c03-ae80-2e1df0151c85
-# ╠═1b1927ca-f7e8-419c-bef1-13168c7a8848
 # ╟─a9409040-77ea-442f-89c5-a5f7636b3e56
 # ╟─16b85f25-b033-47f0-a9a9-e92ae0ad97de
 # ╟─90e92459-1bfa-41b1-a0e1-e9499ef0d3b2
