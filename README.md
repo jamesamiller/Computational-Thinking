@@ -6,10 +6,10 @@ This material is being developed for a [UAH College of Science](https://www.uah.
 
 We want to give incoming STEM students
 
-- an introduction into how computer experiments can clarify their understanding of difficult concepts, such as probability and statistics and differential equations.
-- an idea of how modeling can lead to a better understanding of a complex physical phenomena.
-- an introduction to some important physical and mathematical ideas.
-- a taste of a programming language that will be of use to them during their college career and beyond.
+- an introduction into how computer experiments can clarify their understanding of difficult concepts, such as probability and statistics and differential equations
+- an idea of how modeling can lead to a better understanding of a complex physical phenomena
+- an introduction to some important physical and mathematical ideas
+- exposure to a programming language that will be of use during their college career and beyond
 
 ## Inspiration
 
@@ -20,9 +20,7 @@ The MIT course [Introduction to Computational Thinking](https://computationalthi
 1. Course divided into *units*, each dealing with a self contained topic of *general interest* in physics, biology, atmospheric science, and perhaps other STEM areas
 2. Units should not be esoteric or filled with jargon
 3. Prerequisites
-    1. High school algebra and trig
-    2. No calculus
-    3. High school science
+    1. Calculus not required
 4. Synchronous and asynchronous online delivery
 5. Computational tool
     1. Julia
@@ -40,7 +38,7 @@ The MIT course [Introduction to Computational Thinking](https://computationalthi
     2. Important background, motivation, and theory should be fairly complete and readable ahead of time
     3. Should include short questions. Answers given during class and added to a "live" version of the notebook
 2. A "live" version with instructor commentary and further additions will be worked on during class and posted after
-3. *A notebook corresponds to a one-hour class*
+3. A notebook corresponds roughly to a one-hour class
 4. Packages should be noted and pre-loaded in Julia
 5. Package `using` commands included first in the notebook
 
