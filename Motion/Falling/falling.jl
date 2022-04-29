@@ -6,7 +6,6 @@ using InteractiveUtils
 
 # ╔═╡ 449faf07-3214-47b6-bb02-824cf900bc07
 begin
-	#using Markdown
 	using PlutoUI
 	using Plots
 end
@@ -45,13 +44,13 @@ md"""
 md"""
 ## Assumption
 
-Suppose we drop a ball from some height, and suppose we do it in a vacuum where air resistance is not an issue. Realistically, this would have to be a contrived experiment in a lab. It would not be case if we just went outside and dropped a ball off the roof.
+Suppose we drop a ball from some height, and suppose we do it in a vacuum where air resistance is not an issue. Realistically, this would have to be a contrived experiment in a lab. It would not be the case if we just went outside and dropped a beach ball off the roof. Here, air resistance would likely have a significant effect on the speed of the ball.
 
 And so let's be honest and say we will **neglect air resistance or friction** in our study. The statement **neglect _______** is used often, and can mean a couple of things:
 
 1. The thing being neglected produces an effect so small you will not notice it, or
 
-2. The effect may not be tiny and it may have a big effect on things, but it's difficult to add and we want to get an **approximate** picture of what's happening before we go ahead, do a bunch of work, and then add it.
+2. The effect may not be tiny and it may have a big effect on things, but it's difficult to add and we want to first get an **approximate** picture of what's happening before we go ahead, do a bunch of work, and then add it.
 
 The last option is the case here. It forms an important **assumption** in our work that follows.
 """
@@ -83,6 +82,7 @@ Rounding ``g`` up to a convenient 10 m/s``^2`` and dropping the ball from rest,
 |   1.0      |     10    |
 |   2.0      |     20    |
 |   4.0      |     40    |
+|   4.8      |     48    |
 |   ...      |  ...      |
  
 """
@@ -98,7 +98,7 @@ But now the speed is continually changing. How to deal with that?
 A couple of options come to mind:
 1. Take the speed to be constant and equal to that at the *start* of the time increment, or
 2. Take the speed to be constant and equal to that in the *middle* of the time increment, or
-3. what else?
+3. Take the speed to be constant and equal to the *average* speed during the time increment.
 """
 
 # ╔═╡ fe7c9f07-10c7-4aa3-b303-211da17ec695
@@ -108,31 +108,35 @@ md"""
 
 # ╔═╡ 6e215ec5-dafb-4eb0-a159-b9028d6de08d
 md"""
-Let's now apply some computational thinking to explore this physical situation.
+Let's now apply some computational thinking to explore these different choices.
 """
 
 # ╔═╡ fcba2327-2306-4fc3-bb70-14e94e5d55c5
 md"""
-Finding the speed increment is not an issue. But the distance increment poses a problem, since the speed *changes* during the increment. We can think immediately of two approaches: 
-- use the average speed at the start of the increment
-- use the initial speed
+Define functions to calculate the change in speed over a time interval and the change in distance fallen over that time interval, for the three options mentioned above.
 """
 
 # ╔═╡ 809e639a-8492-4b0a-bc98-2226c2404478
-function Δv_grav(Δt, a=10.0)
-	Δt*a
+function Δv(Δt, g=10.0)
+	Δt*g
 end
 
 # ╔═╡ dd4a6136-75a7-460d-9bbc-97a374e23a4f
-function Δz(v₀, Δt, Δv::Function)
-	v_ave = ( v₀ + (v₀ + Δv(Δt)) )/2
-	v_ave*Δt
+function Δz_start(v₀, Δt)
+	v₀*Δt
 end
 
-# ╔═╡ c90cceb1-5f04-46e5-8879-da29516ea81f
-function Δz(v₀, Δt)
-	v_init = v₀ 
-	v_init*Δt
+# ╔═╡ 44762363-cc3e-422a-8044-670bc04b1690
+function Δz_mid(v₀, Δt)
+	v_mid = v₀ + Δv(Δt/2)
+	v_mid*Δt
+end
+
+# ╔═╡ 9059e6d7-ad27-4b06-b740-a91b9bc9f349
+function Δz_ave(v₀, Δt)
+	v_end = v₀ + Δv(Δt)
+	v_ave = (v₀ + v_end)/2
+	v_ave*Δt
 end
 
 # ╔═╡ 52671566-39e8-4849-b27d-669f6bdb49db
@@ -1212,8 +1216,9 @@ version = "0.9.1+5"
 # ╟─fcba2327-2306-4fc3-bb70-14e94e5d55c5
 # ╠═809e639a-8492-4b0a-bc98-2226c2404478
 # ╠═dd4a6136-75a7-460d-9bbc-97a374e23a4f
-# ╠═c90cceb1-5f04-46e5-8879-da29516ea81f
-# ╟─52671566-39e8-4849-b27d-669f6bdb49db
+# ╠═44762363-cc3e-422a-8044-670bc04b1690
+# ╠═9059e6d7-ad27-4b06-b740-a91b9bc9f349
+# ╠═52671566-39e8-4849-b27d-669f6bdb49db
 # ╟─453ad11f-7bed-49f7-8255-6b4e7a86ae57
 # ╠═0e324d7d-932a-41a5-b4e8-924286ed6878
 # ╟─bf58c0d6-1c31-4fcc-b9e6-72058c79d79a
