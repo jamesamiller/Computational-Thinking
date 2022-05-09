@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.3
+# v0.19.3
 
 using Markdown
 using InteractiveUtils
@@ -17,16 +17,14 @@ PlutoUI.TableOfContents(aside=true)
 md"""
 ## Physics and math concepts
 
-- Free fall
-- Air friction
-- Terminal speed
+- Finite difference equations
+- Their solution / time stepping
 """
 
 # ╔═╡ f878dcc5-06db-4dd4-8df8-c4666cf8f605
 md"""
 ## Julia and numerical concepts
 
-- Self-documenting code
 - Array comprehension
 - Plotting, using `Plots` package
 - Functions
@@ -50,7 +48,7 @@ For instance, some quantity ``x`` may evolve in time ``t`` according to
 ```math
 x(t+\Delta t) = x(t) + f(x(t),t)\Delta t,
 ```
-where ``f(x(t),t)`` is the rate of change of ``x``. It can depend on the value of ``x`` at the time ``t`` as well as explicitly on the time.
+where ``f(x(t),t)`` is the rate of change of ``x``. It can depend on the value of ``x`` at the time ``t`` as well as explicitly on the time. By the way, this type of equation is called a **finite difference equation**.
 """
 
 # ╔═╡ ecb886b8-cf77-4d82-865b-d2af63f22a2e
@@ -66,7 +64,7 @@ But while we know what determines how ``x`` evolves (namely, ``f``), the law doe
 
 # ╔═╡ 42986972-b891-46ae-8462-93a31924e6fe
 md"""
-### Constant rate of change ``f``
+### ``f`` is constant in time
 """
 
 # ╔═╡ 2d13c6f7-4212-4bde-8e3d-1e46bc7992a6
@@ -76,12 +74,12 @@ Suppose ``f`` does not depend on time or ``x``. Then it's constant over any inte
 
 # ╔═╡ 1dd0d637-4419-4475-9f36-4da7b8107e9a
 md"""
-### Rate of change depends on time: ``f(t)``
+### ``f`` depends on time
 """
 
 # ╔═╡ c357aaef-725a-40b2-aadf-2bd5a26ab997
 md"""
-Now, there's a question: If ``f`` changes over the time interval ``\Delta t``, at what time should we evaluate ``f`` at?
+Now, there's a question: If ``f(t)`` changes over the time interval ``\Delta t``, at what time should we evaluate ``f(t)`` at?
 
 A couple of options come to mind:
 1. Take ``f`` to be constant and equal to that at the *start* of the time increment, or
@@ -91,12 +89,12 @@ A couple of options come to mind:
 
 # ╔═╡ 8e1fafdb-bdf0-4649-aff7-7720280f466a
 md"""
-### Rate of change depends on time and ``x``: ``f(x(t),t)``
+### ``f`` depends on ``x(t)`` and maybe also time
 """
 
 # ╔═╡ 2e7cbd7c-c650-4088-ac92-3490f2db8e2c
 md"""
-This is almost the same situation as the last one.
+This is almost the same situation as the last one, but now ``f`` depends on the actual solution ``x(t)`` and perhaps also has explicit dependence on ``t``. A couple of examples are ``f = x^2`` or ``f = t\, \sin(x)``.
 """
 
 # ╔═╡ 2b1e6d9b-abed-4633-a52e-a84514a6c27a
@@ -106,12 +104,12 @@ md"""
 
 # ╔═╡ 07c5d7e1-574c-4f3b-b879-6b2842d862c1
 md"""
-## Constant ``f``
+## ``f`` is constant in time
 """
 
 # ╔═╡ 6e215ec5-dafb-4eb0-a159-b9028d6de08d
 md"""
-Let's first illustrate the calculation for the simplest case of a constant ``f``.
+Let's first illustrate the calculation of the solution ``x(t)`` for the simplest case of a constant ``f``.
 """
 
 # ╔═╡ c87acb83-84e6-484a-bed7-319bdb3d0feb
@@ -143,10 +141,15 @@ function Δx(Δt, f=10.0)
 	Δt*f
 end
 
+# ╔═╡ 8d015906-914e-4ea5-935f-9cde818000af
+md"""
+> ☡ Coding pointer: The output of the function definition says you've defined a function with 2 methods. This is often called function **overloading**. It's one function that can be executed 2 different ways: with or without passing the function ``f``.
+"""
+
 # ╔═╡ d6c69e40-e383-4588-8130-09ac2a2a69a9
 begin
 	x = similar(t)
-	x[1] = 0.0. # initial value
+	x[1] = 0.0 # initial value
 	for i = 2:nmax+1
 		x[i] = x[i-1] + Δx(Δt)
 	end
@@ -154,7 +157,7 @@ end
 
 # ╔═╡ 1fbc2b57-aa8a-47e8-8886-603e15474861
 md"""
-> ☡ Code practice: The `nmax+1` can be tricky. Best to use `length(x)`; that way you don't have to remember how long the array is, or scroll back to an earlier point in the code to look for the variable name for it. We will do that from now on.
+> ☡ Coding pointer: The `nmax+1` can be tricky. Best to use `length(x)`; that way you don't have to remember how long the array is, or scroll back to an earlier point in the code to look for the variable name for it. We will do that from now on.
 >
 >Also, the `similar` command makes an array of the same size, but the values it contains are *uninitialized*. You need to make any initial value settings.
 """
@@ -177,7 +180,7 @@ md"""
 
 # ╔═╡ 1edc180d-c2fe-4e30-8650-de2952b97a14
 md"""
-We mentioned three options, and there are more, for handling this situation. Again, the problem is that as we step over ``\Delta t``, ``f`` is changing. So, where should we evaluate ``f``? At what time?
+We mentioned three options -- and there are more -- for handling this situation. Again, the problem is that as we step over ``\Delta t``, ``f`` is changing. So, where should we evaluate ``f``? At what time?
 """
 
 # ╔═╡ 002fab49-b0c0-4973-b676-473daaf2c698
@@ -215,7 +218,7 @@ md"""
 
 # ╔═╡ 453ad11f-7bed-49f7-8255-6b4e7a86ae57
 md"""
-Let's now calculate the ``x`` values for these three cases.
+Let's now calculate the ``x`` values for these three cases. We'll take the initial condition to be again ``x(0) = 0``.
 """
 
 # ╔═╡ cc9737b7-33ee-48c4-9cbd-dde3f9b28afc
@@ -234,7 +237,6 @@ for i in 2:length(t)
 	x_mid[i] = x_mid[i-1] + Δx_mid(t[i-1], Δt, f)
 	x_ave[i] = x_ave[i-1] + Δx_ave(t[i-1], Δt, f)
 end
-
 
 # ╔═╡ 421f19c1-38eb-4cff-b8d4-7a6ae4f438d0
 md"""
@@ -259,187 +261,166 @@ md"""
 
 # ╔═╡ d98ad456-1f29-4047-8724-78a8cb35187a
 md"""
-Let's now make a plot of speed as a function of time.
+Let's now make some plots of ``x`` as a function of time.
 """
 
 # ╔═╡ bafa445a-f3c8-4e83-bfa7-2b907bd33319
 begin
-	plot(t,v,label="v")
-	plot!(title="speed vs time",xlabel="time [s]",ylabel="speed [m/s]")
+	plot(t,x_start,label="start")
+	plot!(t,x_mid,label="mid")
+	plot!(t,x_ave,label="ave")
+	plot!(title="3 choices for evaluating f",xlabel="time [some units]",ylabel="x [some units]")
 end
 
 # ╔═╡ 61f10f8b-9f83-45ae-815f-22a86180dcfe
 md"""
-This looks like we expect: a nice linear increase with a final speed of 20 m/s at the final time of 2 s.
+It looks like two of the curves coincide: the ones for `x_mid` and `x_ave`. This is in fact the case, which can be verified by commenting out the `plot` command for one of them. Be sure to try it and convince yourself!
+
+*And it's definitely the case that the choice of where to evaluate ``f(t)`` affects the solution!*
 """
 
-# ╔═╡ 1d0dab51-947d-40f6-a38b-6bf54b1595cf
+# ╔═╡ ec533632-19dc-47e6-8491-3da3c2a3fe8a
 md"""
-Now look at distance, and compare our three approaches. It turns out we also know the exact result: 
-
-```math
-z(t) = z_0 + v_0 t + \frac{1}{2} g t^2
-```
-
-and we will show that for comparison.
-"""
-
-# ╔═╡ 2f305768-1b2b-4939-926e-dee480da23f1
-begin
-	z = similar(t)
-	z[1] = 0.0
-	for i = 2:length(z)
-		z[i] = 10*t[i]^2/2
-	end
-end
-
-# ╔═╡ 6afbfcf5-d0ed-484a-85df-9629f9d731f4
-begin
-	plot(t, z_vstart, label="vstart")
-	plot!(t, z_vmid, label="vmid")
-	plot!(t, z_vave, label="vave")
-	plot!(t, z, label="exact")
-	plot!(title="distance vs time",xlabel="time [s]",ylabel="distance [m]")
-end
-
-# ╔═╡ 06d74ac5-4a08-4212-afac-1f6153608217
-md"""
-Three of the plot lines lie on top of each other. You can see which is which by commenting out one or more of the `plot` commands.
-"""
-
-# ╔═╡ a9409040-77ea-442f-89c5-a5f7636b3e56
-md"""
->Question: Which approach(s) for calculating the distance is the most accurate?
->
->Answer:
->
-> Question: Experiment with decreasing Δt (and remembering to increase `nmax` so that the final time remains the same). What happens to the accuracy of the least accurate approach?
+> 🤔 Question: How does the choice of Δt change the results? Make is smaller and larger than the above value of 0.2. But reset it to 0.2 when you're done for the next section.
 >
 > Answer:
 """
 
-# ╔═╡ 16b85f25-b033-47f0-a9a9-e92ae0ad97de
+# ╔═╡ 6a167ed2-45b4-4a09-a7e1-e24478c6ed38
 md"""
-# Air friction
+## ``f`` depends on ``x(t)`` and maybe also time
 """
 
-# ╔═╡ 90e92459-1bfa-41b1-a0e1-e9499ef0d3b2
+# ╔═╡ a48c3f1a-012c-4de3-b710-6c24bfb025ce
 md"""
-## A model
+Consider another illustrative example of the function ``f``, in this case ``f = x^2``.
 """
 
-# ╔═╡ b64d55a2-2272-4fb4-b71c-bc0e4ad0bfff
+# ╔═╡ 02f6c327-048a-42ad-8d51-116fb2ba42fe
 md"""
-Typically, things don't fall in a vacuum. Air resistance or friction is complicated, and accurate treatments require state-of-the-art computational fluid dynamics.
-
-One model for the friction force that is generally decent is
-
-```math
-f = \frac{1}{2} C_d\, \rho\, A\, v^2 ,
-```
-where 
-- ``C_d`` is the **coefficient of dynamic friction**, and takes into account all the complicated effects of air moving around the object,
-- ``\rho`` is the density of air,
-- ``A`` is the cross-sectional area of the object, 
-- ``v`` is its speed, and
-- ``m`` is its mass (used later).
-
-The friction force is always directed *opposite* to the direction of motion.
-
-It's effect is to decrease the object speed by
-```math
-\Delta v = -\frac{f}{m} \Delta t,
-```
-if ``\Delta t \rightarrow 0``. 
-
-Our time intervals are not **infinitesimally small**, so this becomes another approximation. And unfortunately, ``f`` depends on speed, so it is *not constant* over a time interval.
+> ☡ Coding pointer: This is Pluto notebook issue... we can't redefine a quantity, in this case the function ``f``. That would destroy the feature that makes Pluto unique! So we'll call it ``g`` for this case.
 """
 
-# ╔═╡ c72fe0c7-c08a-4447-a727-612717c67e11
-md"""
-Learning from the distance study above, it looks reasonable to find the change in speed in an interval using the speed in the *middle* of the interval. So what we are doing is
-1. Stepping forward a half interval, and then using that to
-2. Step forward the whole interval.
-"""
-
-# ╔═╡ 930a4dff-f3ca-4817-9bd7-ef5c1d476431
-md"""
-## Computer experiments
-"""
-
-# ╔═╡ ea8c0bb9-c6bf-4be5-a582-f637de2bfa15
-md"""
-We need to consider a concrete example. Let's use a baseball.
-
-Parameters:
-
-- ``m = 0.145`` kg
-- ``C_d = 0.346``
-- ``\rho = 1.225`` kg/m``^3``
-- ``A = 0.0043`` m``^2``
-"""
-
-# ╔═╡ 7a7b5329-582a-467b-a797-711e63e11966
-function Δv_friction(v₀, Δt, g=10.0; mass=0.145, C_d=0.346, ρ=1.225, A=0.0043)
-	f = C_d*ρ*A*v₀^2 / 2
-	-(f/mass)*Δt
+# ╔═╡ 858520cf-cc81-4fa4-afa1-b412bc43e062
+function g(x)
+	x^2
 end
 
-# ╔═╡ 1c5586ea-9177-49a0-ab97-17b76b45b834
+# ╔═╡ 78a73608-de13-438c-822f-d2eb4b4a0a5b
 md"""
-To see the effects of friction more easily, we'll need to consider longer times. Let's recalculate the time grid from above. Try `nmax = 100` and `Δt = 0.2`.
+We'll have the same Pluto issue when defining the functions to increment ``x``, so we need to change the name a bit. And while we don't need the time at the start of the interval here, we'll include it for generality and ease of modification later.
 """
 
-# ╔═╡ 9fa851b8-cc2b-4e5d-b363-f97bf096383a
+# ╔═╡ 5785a365-738f-41f9-907a-133ca9cddc67
+function Δx_gstart(t₀, x₀, Δt, f::Function)
+	f(x₀)*Δt
+end
+
+# ╔═╡ 75b4d476-9a25-41c3-97ad-c61b7bba7027
+function Δx_gmid(t₀, x₀, Δt, f::Function)
+	x_mid = x₀ + f(x₀)*Δt/2
+	f(x_mid)*Δt
+end
+
+# ╔═╡ aa27d3ae-12da-45f1-af6b-3fdfed216835
+function Δx_gave(t₀, x₀, Δt, f::Function)
+	x_end = x₀ + f(x₀)*Δt
+	f_ave = (f(x_end) + f(x₀))/2
+	f_ave*Δt
+end
+
+# ╔═╡ 6afbfaed-9e8e-4b20-96d1-15b3832ceb78
+md"""
+Let's now calculate the ``x`` values for these three cases. We'll take the initial condition to be this time ``x(0) = 0.4``.
+"""
+
+# ╔═╡ a9bdbc6d-2cfd-47dd-840c-f495130601c1
 begin
-	v[1] = 0.0
-	for i in 2:length(v)
-		v_halfstep = v[i-1] + ( Δv_grav(Δt/2) + Δv_friction(v[i-1], Δt/2) )
-		v[i] = v[i-1] + ( Δv_grav(Δt) + Δv_friction(v_halfstep, Δt) )
-	end
+	x_gstart = similar(t)
+	x_gmid = similar(t)
+	x_gave = similar(t)
+	x_gstart[1] = 0.4  # initial value
+	x_gmid[1] = 0.4  # initial value
+	x_gave[1] = 0.4  # initial value
 end
 
-# ╔═╡ c356c512-565b-4da3-9d77-a12da63d349c
-begin
-	plot(t,v,label="v")
-	plot!(title="With air friction",xlabel="time [s]",ylabel="speed [m/s]")
+# ╔═╡ 695669d8-f368-4156-84df-42fd40653758
+for i in 2:length(t)
+	x_gstart[i] = x_gstart[i-1] + Δx_gstart(t[i-1], x_gstart[i-1], Δt, g)
+	x_gmid[i] = x_gmid[i-1] + Δx_gmid(t[i-1], x_gmid[i-1], Δt, g)
+	x_gave[i] = x_gave[i-1] + Δx_gave(t[i-1], x_gave[i-1], Δt, g)
 end
 
-# ╔═╡ d8331098-d52c-4cd1-90d0-2756d6b6589e
+# ╔═╡ 61b28060-5ee9-4699-a9d5-0628537f14d9
+x_gstart
+
+# ╔═╡ 5e79a3d1-d403-437c-8da3-2c0216c8432e
+x_gmid
+
+# ╔═╡ 0de24a1d-dbb1-4944-97ed-97cba4428a35
+x_gave
+
+# ╔═╡ 9e59294b-40fe-4c21-8496-bd85680f15b6
 md"""
-Notice that the speed behaves differently than with no friction. It approaches a limiting value, known as the **terminal speed**. This is different for every object.
-
-Note also that without a computer experiment, it would not be possible to find the terminal speed without calculus.
+Interesting... now *all three choices give different results*, but the middle and average cases are very close.
 """
 
-# ╔═╡ 01d90dbf-b9ea-4daa-8141-022e974bdbed
+# ╔═╡ 3861a74a-bb31-439d-a359-233333b5c536
+begin
+	plot(t,x_gstart,label="start")
+	plot!(t,x_gmid,label="mid")
+	plot!(t,x_gave,label="ave")
+	plot!(title="3 choices for evaluating g",xlabel="time [some units]",ylabel="x [some units]")
+end
+
+# ╔═╡ 8d3c3463-c9bd-414d-a0ca-ef6d214155ed
 md"""
->Question: Experiment with changing ``\Delta t`` (and increasing the number of grid points to keep the final time the same). What happens to the value of the terminal speed? 
+> 🤔 Question: How does the choice of Δt change the results? Make is smaller and larger than the above value of 0.2, but reset to 0.2 when done.
 >
->Answer:
+> Answer:
 """
 
-# ╔═╡ f8a963e7-272f-4c01-86c2-ad09e5f90884
+# ╔═╡ bf1a5cb5-4073-4d7a-989e-4b8f6bd97415
 md"""
-As an aside, we can continue with our practice of encapsulating code within functions (which we partially departed from in the last calculation).
-
-Here's an example of how to do it.
+### Exact result
 """
 
-# ╔═╡ 4656fd48-7908-4c12-9117-4bf8a9e40a9a
-function v_update!(v, Δt, Δv_grav::Function, Δv_friction::Function)
-	for i in 2:length(v)
-		v_halfstep = v[i-1] + ( Δv_grav(Δt/2) + Δv_friction(v[i-1], Δt/2) )
-		v[i] = v[i-1] + ( Δv_grav(Δt) + Δv_friction(v_halfstep, Δt) )
+# ╔═╡ 780b02c4-5fc5-400b-9aac-09345c2769a0
+md"""
+Now, it turns out we know the exact result for ``x(t)`` here. It's
+```math
+x(t) = \frac{1}{x(0)^{-1} - t} .
+```
+We can compare this exact result with the choices above.
+"""
+
+# ╔═╡ dbf96f31-84d4-45c0-9e37-17a277372de8
+begin
+	x_exact = similar(t)
+	x_exact[1] = 0.4
+	for i = 2:length(t)
+		x_exact[i] = 1/( (1/x_exact[1]) - t[i] )
 	end
 end
 
-# ╔═╡ e60f5c16-f960-4c33-b966-4aa96b62ea84
+# ╔═╡ 629aae68-24f2-4cbd-99f3-1d964c723247
 begin
-	v_update!(v, Δt, Δv_grav, Δv_friction)
-	plot(t,v,label="v")
-	plot!(title="With air friction",xlabel="time [s]",ylabel="speed [m/s]")
+	plot(t,x_gstart,label="start")
+	plot!(t,x_gmid,label="mid")
+	#plot!(t,x_gmid,label="ave")
+	plot!(t,x_exact,label="exact")
+	plot!(title="With exact result",xlabel="time [some units]",ylabel="x [some units]")
 end
+
+# ╔═╡ 968338b0-4536-45e5-ac12-573b939b9393
+md"""
+The exact result is much closer to the middle or average choice, but still shows some divergence at later times. You can experiment with decreasing Δt, and you'll find that the middle and average results converge to the exact result. The starting choice is better, but not as good as the middle or average choices.
+"""
+
+# ╔═╡ acda2d19-e948-4b19-9da6-63b5a16c2e08
+md"""
+# Conclusions
+"""
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1282,8 +1263,8 @@ version = "0.9.1+5"
 # ╔═╡ Cell order:
 # ╠═449faf07-3214-47b6-bb02-824cf900bc07
 # ╠═2dd2d4e3-14a0-43f1-b207-969b98ee5346
-# ╟─89f1748e-593f-473f-907d-b3a64073e197
-# ╟─f878dcc5-06db-4dd4-8df8-c4666cf8f605
+# ╠═89f1748e-593f-473f-907d-b3a64073e197
+# ╠═f878dcc5-06db-4dd4-8df8-c4666cf8f605
 # ╟─f5e86f2a-076d-11ec-1080-c341c92d3fd1
 # ╟─26f6893e-17ab-48e9-88d0-98a79ec0a1b0
 # ╟─40b5474e-a8eb-4f6e-bcba-d49f714c83f2
@@ -1302,6 +1283,7 @@ version = "0.9.1+5"
 # ╟─a1f373d4-4c8c-448b-b336-82288f712f7c
 # ╟─fcba2327-2306-4fc3-bb70-14e94e5d55c5
 # ╠═809e639a-8492-4b0a-bc98-2226c2404478
+# ╟─8d015906-914e-4ea5-935f-9cde818000af
 # ╠═d6c69e40-e383-4588-8130-09ac2a2a69a9
 # ╟─1fbc2b57-aa8a-47e8-8886-603e15474861
 # ╟─6fd61abc-6bf3-4df7-b6bc-8adfafc461e0
@@ -1325,25 +1307,29 @@ version = "0.9.1+5"
 # ╟─d98ad456-1f29-4047-8724-78a8cb35187a
 # ╠═bafa445a-f3c8-4e83-bfa7-2b907bd33319
 # ╟─61f10f8b-9f83-45ae-815f-22a86180dcfe
-# ╟─1d0dab51-947d-40f6-a38b-6bf54b1595cf
-# ╠═2f305768-1b2b-4939-926e-dee480da23f1
-# ╠═6afbfcf5-d0ed-484a-85df-9629f9d731f4
-# ╟─06d74ac5-4a08-4212-afac-1f6153608217
-# ╟─a9409040-77ea-442f-89c5-a5f7636b3e56
-# ╟─16b85f25-b033-47f0-a9a9-e92ae0ad97de
-# ╟─90e92459-1bfa-41b1-a0e1-e9499ef0d3b2
-# ╟─b64d55a2-2272-4fb4-b71c-bc0e4ad0bfff
-# ╟─c72fe0c7-c08a-4447-a727-612717c67e11
-# ╟─930a4dff-f3ca-4817-9bd7-ef5c1d476431
-# ╟─ea8c0bb9-c6bf-4be5-a582-f637de2bfa15
-# ╠═7a7b5329-582a-467b-a797-711e63e11966
-# ╟─1c5586ea-9177-49a0-ab97-17b76b45b834
-# ╠═9fa851b8-cc2b-4e5d-b363-f97bf096383a
-# ╠═c356c512-565b-4da3-9d77-a12da63d349c
-# ╟─d8331098-d52c-4cd1-90d0-2756d6b6589e
-# ╟─01d90dbf-b9ea-4daa-8141-022e974bdbed
-# ╟─f8a963e7-272f-4c01-86c2-ad09e5f90884
-# ╠═4656fd48-7908-4c12-9117-4bf8a9e40a9a
-# ╠═e60f5c16-f960-4c33-b966-4aa96b62ea84
+# ╟─ec533632-19dc-47e6-8491-3da3c2a3fe8a
+# ╟─6a167ed2-45b4-4a09-a7e1-e24478c6ed38
+# ╟─a48c3f1a-012c-4de3-b710-6c24bfb025ce
+# ╟─02f6c327-048a-42ad-8d51-116fb2ba42fe
+# ╠═858520cf-cc81-4fa4-afa1-b412bc43e062
+# ╟─78a73608-de13-438c-822f-d2eb4b4a0a5b
+# ╠═5785a365-738f-41f9-907a-133ca9cddc67
+# ╠═75b4d476-9a25-41c3-97ad-c61b7bba7027
+# ╠═aa27d3ae-12da-45f1-af6b-3fdfed216835
+# ╟─6afbfaed-9e8e-4b20-96d1-15b3832ceb78
+# ╠═a9bdbc6d-2cfd-47dd-840c-f495130601c1
+# ╠═695669d8-f368-4156-84df-42fd40653758
+# ╠═61b28060-5ee9-4699-a9d5-0628537f14d9
+# ╠═5e79a3d1-d403-437c-8da3-2c0216c8432e
+# ╠═0de24a1d-dbb1-4944-97ed-97cba4428a35
+# ╟─9e59294b-40fe-4c21-8496-bd85680f15b6
+# ╠═3861a74a-bb31-439d-a359-233333b5c536
+# ╟─8d3c3463-c9bd-414d-a0ca-ef6d214155ed
+# ╟─bf1a5cb5-4073-4d7a-989e-4b8f6bd97415
+# ╟─780b02c4-5fc5-400b-9aac-09345c2769a0
+# ╠═dbf96f31-84d4-45c0-9e37-17a277372de8
+# ╠═629aae68-24f2-4cbd-99f3-1d964c723247
+# ╟─968338b0-4536-45e5-ac12-573b939b9393
+# ╠═acda2d19-e948-4b19-9da6-63b5a16c2e08
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
