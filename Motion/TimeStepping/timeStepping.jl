@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.3
+# v0.19.4
 
 using Markdown
 using InteractiveUtils
@@ -143,7 +143,7 @@ end
 
 # ╔═╡ 8d015906-914e-4ea5-935f-9cde818000af
 md"""
-> ☡ Coding pointer: The output of the function definition says you've defined a function with 2 methods. This is often called function **overloading**. It's one function that can be executed 2 different ways: with or without passing the function ``f``.
+> ☡ Coding pointer: The output of the function definition says you've defined a function with 2 methods. This is often called function **overloading**. It's one function that can be executed 2 different ways: with or without passing the function ``f`` in this case.
 """
 
 # ╔═╡ d6c69e40-e383-4588-8130-09ac2a2a69a9
@@ -240,7 +240,7 @@ end
 
 # ╔═╡ 421f19c1-38eb-4cff-b8d4-7a6ae4f438d0
 md"""
-As a "sanity check" of the results... show a couple of the arrays. 
+As a quick check of the results, show the arrays and make sure nothing diverges, for instance. 
 """
 
 # ╔═╡ a87dd44d-89ca-41cc-b077-d444ea37c48d
@@ -286,6 +286,43 @@ md"""
 > Answer:
 """
 
+# ╔═╡ c416bf8c-8096-4ee8-bbfe-c5287f52d732
+md"""
+### Exact result
+"""
+
+# ╔═╡ c39566f3-f184-4cba-9dfb-390a9a5a8448
+md"""
+We know the exact result for ``x(t)``. It's
+```math
+x(t) = t^2 .
+```
+We can compare this exact result with the choices above.
+"""
+
+# ╔═╡ d844d41b-35ee-4391-a36e-cffc5820cf30
+begin
+	x_texact = similar(t)
+	x_texact[1] = 0.0
+	for i = 2:length(x_texact)
+		x_texact[i] = t[i]^2
+	end
+end
+
+# ╔═╡ 934a56c2-001f-4d7b-9f22-44b67c1b0481
+begin
+	plot(t,x_start,label="start")
+	plot!(t,x_mid,label="mid")
+	#plot!(t,x_ave,label="ave")
+	plot!(t,x_texact,label="exact")
+	plot!(title="With exact result",xlabel="time [some units]",ylabel="x [some units]")
+end
+
+# ╔═╡ 6a0e0537-db4a-46b2-b5a1-c9afbf98a028
+md"""
+The exact result matches the midpoint or average evaluation of ``f``. When we let ``Δt`` approach zero, all results converge. *But otherwise, we see that evaluating at the beginning of the interval is not so good.*
+"""
+
 # ╔═╡ 6a167ed2-45b4-4a09-a7e1-e24478c6ed38
 md"""
 ## ``f`` depends on ``x(t)`` and maybe also time
@@ -298,7 +335,7 @@ Consider another illustrative example of the function ``f``, in this case ``f = 
 
 # ╔═╡ 02f6c327-048a-42ad-8d51-116fb2ba42fe
 md"""
-> ☡ Coding pointer: This is Pluto notebook issue... we can't redefine a quantity, in this case the function ``f``. That would destroy the feature that makes Pluto unique! So we'll call it ``g`` for this case.
+> ☡ Coding pointer: This is Pluto notebook issue... we can't redefine a quantity, in this case the function ``f``. That would destroy the feature that makes Pluto unique! Namely, it's reactivity. So we'll call it ``g`` for this case.
 """
 
 # ╔═╡ 858520cf-cc81-4fa4-afa1-b412bc43e062
@@ -312,18 +349,23 @@ We'll have the same Pluto issue when defining the functions to increment ``x``, 
 """
 
 # ╔═╡ 5785a365-738f-41f9-907a-133ca9cddc67
-function Δx_gstart(t₀, x₀, Δt, f::Function)
+function Δx_fstart(t₀, x₀, Δt, f::Function)
 	f(x₀)*Δt
 end
 
+# ╔═╡ 07651aee-71aa-46c1-9e70-636db648b0fd
+md"""
+> ☡ Coding pointer: Notice that within this updating function we can still use ``f`` as a variable name. We don't need to change it to ``g``. This is because ``f`` is **local** to `Δx_gstart`.
+"""
+
 # ╔═╡ 75b4d476-9a25-41c3-97ad-c61b7bba7027
-function Δx_gmid(t₀, x₀, Δt, f::Function)
+function Δx_fmid(t₀, x₀, Δt, f::Function)
 	x_mid = x₀ + f(x₀)*Δt/2
 	f(x_mid)*Δt
 end
 
 # ╔═╡ aa27d3ae-12da-45f1-af6b-3fdfed216835
-function Δx_gave(t₀, x₀, Δt, f::Function)
+function Δx_fave(t₀, x₀, Δt, f::Function)
 	x_end = x₀ + f(x₀)*Δt
 	f_ave = (f(x_end) + f(x₀))/2
 	f_ave*Δt
@@ -336,29 +378,29 @@ Let's now calculate the ``x`` values for these three cases. We'll take the initi
 
 # ╔═╡ a9bdbc6d-2cfd-47dd-840c-f495130601c1
 begin
-	x_gstart = similar(t)
-	x_gmid = similar(t)
-	x_gave = similar(t)
-	x_gstart[1] = 0.4  # initial value
-	x_gmid[1] = 0.4  # initial value
-	x_gave[1] = 0.4  # initial value
+	x_fstart = similar(t)
+	x_fmid = similar(t)
+	x_fave = similar(t)
+	x_fstart[1] = 0.4  # initial value
+	x_fmid[1] = 0.4  # initial value
+	x_fave[1] = 0.4  # initial value
 end
 
 # ╔═╡ 695669d8-f368-4156-84df-42fd40653758
 for i in 2:length(t)
-	x_gstart[i] = x_gstart[i-1] + Δx_gstart(t[i-1], x_gstart[i-1], Δt, g)
-	x_gmid[i] = x_gmid[i-1] + Δx_gmid(t[i-1], x_gmid[i-1], Δt, g)
-	x_gave[i] = x_gave[i-1] + Δx_gave(t[i-1], x_gave[i-1], Δt, g)
+	x_fstart[i] = x_fstart[i-1] + Δx_fstart(t[i-1], x_fstart[i-1], Δt, g)
+	x_fmid[i] = x_fmid[i-1] + Δx_fmid(t[i-1], x_fmid[i-1], Δt, g)
+	x_fave[i] = x_fave[i-1] + Δx_fave(t[i-1], x_fave[i-1], Δt, g)
 end
 
 # ╔═╡ 61b28060-5ee9-4699-a9d5-0628537f14d9
-x_gstart
+x_fstart
 
 # ╔═╡ 5e79a3d1-d403-437c-8da3-2c0216c8432e
-x_gmid
+x_fmid
 
 # ╔═╡ 0de24a1d-dbb1-4944-97ed-97cba4428a35
-x_gave
+x_fave
 
 # ╔═╡ 9e59294b-40fe-4c21-8496-bd85680f15b6
 md"""
@@ -367,10 +409,10 @@ Interesting... now *all three choices give different results*, but the middle an
 
 # ╔═╡ 3861a74a-bb31-439d-a359-233333b5c536
 begin
-	plot(t,x_gstart,label="start")
-	plot!(t,x_gmid,label="mid")
-	plot!(t,x_gave,label="ave")
-	plot!(title="3 choices for evaluating g",xlabel="time [some units]",ylabel="x [some units]")
+	plot(t,x_fstart,label="start")
+	plot!(t,x_fmid,label="mid")
+	plot!(t,x_fave,label="ave")
+	plot!(title="3 choices for evaluating f",xlabel="time [some units]",ylabel="x [some units]")
 end
 
 # ╔═╡ 8d3c3463-c9bd-414d-a0ca-ef6d214155ed
@@ -405,9 +447,9 @@ end
 
 # ╔═╡ 629aae68-24f2-4cbd-99f3-1d964c723247
 begin
-	plot(t,x_gstart,label="start")
-	plot!(t,x_gmid,label="mid")
-	#plot!(t,x_gmid,label="ave")
+	plot(t,x_fstart,label="start")
+	plot!(t,x_fmid,label="mid")
+	#plot!(t,x_fave,label="ave")
 	plot!(t,x_exact,label="exact")
 	plot!(title="With exact result",xlabel="time [some units]",ylabel="x [some units]")
 end
@@ -420,6 +462,13 @@ The exact result is much closer to the middle or average choice, but still shows
 # ╔═╡ acda2d19-e948-4b19-9da6-63b5a16c2e08
 md"""
 # Conclusions
+"""
+
+# ╔═╡ ed702970-dde8-494f-8725-2b89bfb4d292
+md"""
+- A finite difference equation can be solved numerically.
+- For a given time step ``\Delta t``, evaluating ``f`` at the middle of the time interval or using an average over the time interval is the most accurate.
+- But, as ``\Delta t`` goes to zero (i.e., becomes very small), all of the methods for evaluating ``f`` during a timestep approach the same result. This will lead to the notion of a **differential equation** as opposed to a finite difference one.
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -1308,12 +1357,18 @@ version = "0.9.1+5"
 # ╠═bafa445a-f3c8-4e83-bfa7-2b907bd33319
 # ╟─61f10f8b-9f83-45ae-815f-22a86180dcfe
 # ╟─ec533632-19dc-47e6-8491-3da3c2a3fe8a
+# ╟─c416bf8c-8096-4ee8-bbfe-c5287f52d732
+# ╟─c39566f3-f184-4cba-9dfb-390a9a5a8448
+# ╠═d844d41b-35ee-4391-a36e-cffc5820cf30
+# ╠═934a56c2-001f-4d7b-9f22-44b67c1b0481
+# ╟─6a0e0537-db4a-46b2-b5a1-c9afbf98a028
 # ╟─6a167ed2-45b4-4a09-a7e1-e24478c6ed38
 # ╟─a48c3f1a-012c-4de3-b710-6c24bfb025ce
 # ╟─02f6c327-048a-42ad-8d51-116fb2ba42fe
 # ╠═858520cf-cc81-4fa4-afa1-b412bc43e062
 # ╟─78a73608-de13-438c-822f-d2eb4b4a0a5b
 # ╠═5785a365-738f-41f9-907a-133ca9cddc67
+# ╟─07651aee-71aa-46c1-9e70-636db648b0fd
 # ╠═75b4d476-9a25-41c3-97ad-c61b7bba7027
 # ╠═aa27d3ae-12da-45f1-af6b-3fdfed216835
 # ╟─6afbfaed-9e8e-4b20-96d1-15b3832ceb78
@@ -1330,6 +1385,7 @@ version = "0.9.1+5"
 # ╠═dbf96f31-84d4-45c0-9e37-17a277372de8
 # ╠═629aae68-24f2-4cbd-99f3-1d964c723247
 # ╟─968338b0-4536-45e5-ac12-573b939b9393
-# ╠═acda2d19-e948-4b19-9da6-63b5a16c2e08
+# ╟─acda2d19-e948-4b19-9da6-63b5a16c2e08
+# ╟─ed702970-dde8-494f-8725-2b89bfb4d292
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
