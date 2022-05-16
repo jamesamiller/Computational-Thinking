@@ -4,21 +4,96 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+end
+
 # ╔═╡ 449faf07-3214-47b6-bb02-824cf900bc07
 begin
-	using PlutoUI
-	using Plots
+	using PlutoUI # for the @bind macro
+	using Plots # plotting front end
 end
+
+# ╔═╡ 31bc44b6-ade1-4277-87dc-02379091d2c2
+html"""
+<div style="
+position: absolute;
+width: calc(100% - 30px);
+border: 50vw solid #282936;
+border-top: 100px solid #282936;
+border-bottom: none;
+box-sizing: content-box;
+left: calc(-50vw + 15px);
+top: -500px;
+height: 200px;
+pointer-events: none;
+"></div>
+
+<div style="
+height: 200px;
+width: 100%;
+background: #282936;
+color: #fff;
+padding-top: 0px;
+">
+<span style="
+font-family: Vollkorn, serif;
+font-weight: 700;
+font-feature-settings: 'lnum', 'pnum';
+"> <p style="
+font-size: 1.5rem;
+opacity: .8;
+"><em>Section x.x</em></p>
+<p style="text-align: center; font-size: 2rem;">
+<em> Timestepping </em>
+</p>
+
+<p style="
+font-size: 1.5rem;
+text-align: center;
+opacity: .8;
+"><em>Finite-difference equations</em></p>
+<div style="display: flex; justify-content: center;">
+</div>
+</div>
+
+<style>
+body {
+overflow-x: hidden;
+}
+</style>"""
+
+# ╔═╡ b44f6459-6816-4747-9823-4a1575a77578
+md"""
+# Notebook packages
+"""
+
+# ╔═╡ 439520d7-7453-43f6-92ef-91524e598d12
+md"""
+Using `Pluto`'s package management system for reproducible results.
+"""
 
 # ╔═╡ 2dd2d4e3-14a0-43f1-b207-969b98ee5346
 PlutoUI.TableOfContents(aside=true)
 
+# ╔═╡ 64d42218-59a4-49b0-b260-f07ee0d0d5bd
+md"""
+# Abstract
+"""
+
 # ╔═╡ 89f1748e-593f-473f-907d-b3a64073e197
 md"""
-## Physics and math concepts
+## Science and math concepts
 
 - Finite difference equations
-- Their solution / time stepping
+- Their solution
+- Time stepping
 """
 
 # ╔═╡ f878dcc5-06db-4dd4-8df8-c4666cf8f605
@@ -114,7 +189,7 @@ Let's first illustrate the calculation of the solution ``x(t)`` for the simplest
 
 # ╔═╡ c87acb83-84e6-484a-bed7-319bdb3d0feb
 md"""
-We will split time up into a number of intervals, yielding an array of time values from the intial to final times. This is often called the **time grid**.
+We will split time up into a number of intervals, yielding an array of time values from the intial to final times. This is often called the **time grid**. We'll set it up using **array comprehensions**, which we've seen before.
 """
 
 # ╔═╡ 263c3ed1-18b4-45eb-9de9-48b4f4f5c417
@@ -335,7 +410,7 @@ Consider another illustrative example of the function ``f``, in this case ``f = 
 
 # ╔═╡ 02f6c327-048a-42ad-8d51-116fb2ba42fe
 md"""
-> ☡ Coding pointer: This is Pluto notebook issue... we can't redefine a quantity, in this case the function ``f``. That would destroy the feature that makes Pluto unique! Namely, it's reactivity. So we'll call it ``g`` for this case.
+> ☡ Coding note: This is Pluto notebook issue... we can't redefine a quantity, in this case the function ``f``. That would destroy the feature that makes Pluto unique! Namely, it's reactivity. So we'll call it ``g`` for this case.
 """
 
 # ╔═╡ 858520cf-cc81-4fa4-afa1-b412bc43e062
@@ -1310,10 +1385,14 @@ version = "0.9.1+5"
 """
 
 # ╔═╡ Cell order:
+# ╟─31bc44b6-ade1-4277-87dc-02379091d2c2
+# ╟─b44f6459-6816-4747-9823-4a1575a77578
+# ╟─439520d7-7453-43f6-92ef-91524e598d12
 # ╠═449faf07-3214-47b6-bb02-824cf900bc07
 # ╠═2dd2d4e3-14a0-43f1-b207-969b98ee5346
-# ╠═89f1748e-593f-473f-907d-b3a64073e197
-# ╠═f878dcc5-06db-4dd4-8df8-c4666cf8f605
+# ╟─64d42218-59a4-49b0-b260-f07ee0d0d5bd
+# ╟─89f1748e-593f-473f-907d-b3a64073e197
+# ╟─f878dcc5-06db-4dd4-8df8-c4666cf8f605
 # ╟─f5e86f2a-076d-11ec-1080-c341c92d3fd1
 # ╟─26f6893e-17ab-48e9-88d0-98a79ec0a1b0
 # ╟─40b5474e-a8eb-4f6e-bcba-d49f714c83f2

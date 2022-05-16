@@ -1,21 +1,95 @@
 ### A Pluto.jl notebook ###
-# v0.17.3
+# v0.19.4
 
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+end
+
 # ╔═╡ 449faf07-3214-47b6-bb02-824cf900bc07
 begin
-	using PlutoUI
+	using PlutoUI # for @bind macro
 	using Plots
 end
+
+# ╔═╡ 2c6dd05a-6505-4fb5-8387-66cd4c6f47aa
+html"""
+<div style="
+position: absolute;
+width: calc(100% - 30px);
+border: 50vw solid #282936;
+border-top: 100px solid #282936;
+border-bottom: none;
+box-sizing: content-box;
+left: calc(-50vw + 15px);
+top: -500px;
+height: 200px;
+pointer-events: none;
+"></div>
+
+<div style="
+height: 200px;
+width: 100%;
+background: #282936;
+color: #fff;
+padding-top: 0px;
+">
+<span style="
+font-family: Vollkorn, serif;
+font-weight: 700;
+font-feature-settings: 'lnum', 'pnum';
+"> <p style="
+font-size: 1.5rem;
+opacity: .8;
+"><em>Section x.x</em></p>
+<p style="text-align: center; font-size: 2rem;">
+<em> Falling </em>
+</p>
+
+<p style="
+font-size: 1.5rem;
+text-align: center;
+opacity: .8;
+"><em>Gravity and air resistance</em></p>
+<div style="display: flex; justify-content: center;">
+</div>
+</div>
+
+<style>
+body {
+overflow-x: hidden;
+}
+</style>"""
+
+# ╔═╡ e9512960-5c44-444f-bb17-cd6fcfcbd640
+md"""
+# Notebook packages
+"""
+
+# ╔═╡ 847f4e0b-cbd7-4151-8c53-face87bf8b6d
+md"""
+Using `Pluto`'s package management for reproducible results.
+"""
 
 # ╔═╡ 2dd2d4e3-14a0-43f1-b207-969b98ee5346
 PlutoUI.TableOfContents(aside=true)
 
+# ╔═╡ 8218aa8a-3614-4ccb-9c3c-a8255a5d5a98
+md"""
+# Abstract
+"""
+
 # ╔═╡ 89f1748e-593f-473f-907d-b3a64073e197
 md"""
-## Physics and math concepts
+## Science and math concepts
 
 - Free fall
 - Air friction
@@ -92,20 +166,35 @@ z(t+ \Delta t) = z(t) + v \, \Delta t .
 ```
 But now the speed is continually changing. How do we deal with that? 
 
-A couple of options come to mind:
+*Well, we dealt with the same situation in the notebook* `timeStepping`! It was the case where the increment function `f` depended on time.
+
+Here, we have an equation of the same type:
+```math
+x(t+\Delta t) = x(t) + f(t)\Delta t \quad\longrightarrow\quad
+z(t+ \Delta t) = z(t) + v(t) \, \Delta t
+```
+
+And so the same couple of options come to mind in this case; viz.,
 1. Take the speed to be constant and equal to that at the *start* of the time increment, or
 2. Take the speed to be constant and equal to that in the *middle* of the time increment, or
 3. Take the speed to be constant and equal to the *average* speed during the time increment.
 """
 
+# ╔═╡ 63a4ba7f-758e-4326-8d46-c72cb0baee4b
+md"""
+But fortunately we already know what to do from `timeStepping`: *We should evaluate ``v(t)`` at the middle of the time increment or take an average over the increment.*
+
+We'll take the midpoint.
+"""
+
 # ╔═╡ fe7c9f07-10c7-4aa3-b303-211da17ec695
 md"""
-## Computer experiments
+## Computer experiment
 """
 
 # ╔═╡ 6e215ec5-dafb-4eb0-a159-b9028d6de08d
 md"""
-Let's explore these different choices with some computer experiments.
+Let's explore the physics of free fall with some computer experiments.
 """
 
 # ╔═╡ c87acb83-84e6-484a-bed7-319bdb3d0feb
@@ -115,31 +204,29 @@ We will split time up into a number of intervals, yielding a grid of time values
 
 # ╔═╡ fcba2327-2306-4fc3-bb70-14e94e5d55c5
 md"""
-Define functions to calculate the change in speed over a time interval and the change in distance fallen over that time interval, for the three options mentioned above.
+Define functions to calculate the change in speed over a time interval and the change in distance fallen over that time interval.
 """
 
 # ╔═╡ 809e639a-8492-4b0a-bc98-2226c2404478
 function Δv_grav(Δt, g=10.0)
-	Δt*g
+	g*Δt
 end
 
-# ╔═╡ dd4a6136-75a7-460d-9bbc-97a374e23a4f
-function Δz_vstart(v₀, Δt)
-	v₀*Δt
-end
+# ╔═╡ d5309100-0e06-4d81-84bf-17de80b30e51
+md"""
+> ☡ Coding note: This is a function with an argument that has a default value. It is therefore optional whether to invoke it. If you want to use the default you would call `Δv_grav(Δt)`. If you want to use another value for `g`, you'd call `Δv_grav(Δv, other_value)`.
+"""
 
 # ╔═╡ 44762363-cc3e-422a-8044-670bc04b1690
-function Δz_vmid(v₀, Δt)
-	v_mid = v₀ + Δv_grav(Δt/2)
+function Δz(v₀, Δv::Function, Δt)
+	v_mid = v₀ + Δv(Δt/2)
 	v_mid*Δt
 end
 
-# ╔═╡ 9059e6d7-ad27-4b06-b740-a91b9bc9f349
-function Δz_vave(v₀, Δt)
-	v_end = v₀ + Δv_grav(Δt)
-	v_ave = (v₀ + v_end)/2
-	v_ave*Δt
-end
+# ╔═╡ 15622d2e-91e2-483d-8da9-b3b6253499b3
+md"""
+> ☡ Coding note: Julia offers support for passing functions as arguments to other functions. This is a useful feature, and allows the code to be used in more general situations, other than the specific one where the speed increment is just due to gravity. This is called **generic programming**.
+"""
 
 # ╔═╡ 453ad11f-7bed-49f7-8255-6b4e7a86ae57
 md"""
@@ -149,40 +236,38 @@ It's natural to start things at zero time. We can then find the time grid for th
 # ╔═╡ 0e324d7d-932a-41a5-b4e8-924286ed6878
 begin
 	Δt = 0.2
-	nmax = 10  # final time = Δt*nmax
-	t = [n*Δt for n in 0:nmax]
+	nmax = 100  # final time = Δt*nmax
+	t = [n*Δt for n in 0:nmax]  # an array comprehension
 end
 
 # ╔═╡ bf58c0d6-1c31-4fcc-b9e6-72058c79d79a
 md"""
-Speed and distance fallen will be determined at these time grid points, and they will thus fill arrays of the same size. Set up the speed and distance grids. Remember that speed and distance will be calculated at these points. It doesn't matter what values we fill them with initially, since they'll be overwritten by those we calculate, except for the first or **initial** values.
+Speed and distance fallen will be determined at these time grid points, and they will fill arrays of the same size. Set up the speed and distance grids. Remember that speed and distance will be calculated at these points. It doesn't matter what values we fill them with initially, since they'll be overwritten by those we calculate, except for the first or **initial** values.
+"""
+
+# ╔═╡ fea74e8b-555c-4fc9-8c34-541da5e978f7
+md"""
+We need to specify those initial values. It's conventional to define the dropping point to be zero, but often it will be something else.
 """
 
 # ╔═╡ cc9737b7-33ee-48c4-9cbd-dde3f9b28afc
 begin
 	v = similar(t)
-	z_vstart = similar(t)
-	z_vmid = similar(t)
-	z_vave = similar(t)
+	z = similar(t)
 	v[1] = 0.0    # initial speed
-	z_vstart[1] = 0.0    # initial location
-	z_vmid[1] = 0.0
-	z_vave[1] = 0.0
+	z[1] = 0.0    # initial location
 end
 
 # ╔═╡ de13ad92-d15f-450a-9388-4e765c29ea66
 md"""
-Step through the time grid and get the speed and the distance fallen up to that time (using the three methods). We know what they are initially, so start at second grid point.
+Step through the time grid and get the speed and the distance fallen up to that time. We know what they are initially, so start at second grid point.
 """
 
 # ╔═╡ e59e1646-d949-456d-8e28-a4f9e1f55a8a
 for i in 2:length(v)
 	v[i] = v[i-1] + Δv_grav(Δt)
-	z_vstart[i] = z_vstart[i-1] + Δz_vstart(v[i-1], Δt)
-	z_vmid[i] = z_vmid[i-1] + Δz_vmid(v[i-1], Δt)
-	z_vave[i] = z_vave[i-1] + Δz_vave(v[i-1], Δt)
+	z[i] = z[i-1] + Δz(v[i-1], Δv_grav, Δt)
 end
-
 
 # ╔═╡ 421f19c1-38eb-4cff-b8d4-7a6ae4f438d0
 md"""
@@ -193,16 +278,13 @@ As a "sanity check" of the results... show a couple of the arrays.
 v
 
 # ╔═╡ becfff3a-b130-44e8-8f9b-f63d693fdc0d
-z_vstart
+z
 
-# ╔═╡ 20e80196-d302-44ad-af58-c2c6211bcc95
-z_vmid
-
-# ╔═╡ 202922e8-9d1a-4a23-afdc-f91deceb899e
+# ╔═╡ 912e1d45-2dd0-4372-87d7-84fde259a266
 md"""
->Question: Do you notice anything interesting here?
+> 🤔 Question: What is the "dependence" of speed and position with time? Can you tell just by looking at the data?
 >
->Answer:
+> Answer:
 """
 
 # ╔═╡ d98ad456-1f29-4047-8724-78a8cb35187a
@@ -229,41 +311,44 @@ Now look at distance, and compare our three approaches. It turns out we also kno
 z(t) = z_0 + v_0 t + \frac{1}{2} g t^2
 ```
 
-and we will show that for comparison.
+and we will show that for comparison. We took ``z_0 = 0`` and ``v_0 = 0``.
 """
 
 # ╔═╡ 2f305768-1b2b-4939-926e-dee480da23f1
 begin
-	z = similar(t)
-	z[1] = 0.0
-	for i = 2:length(z)
-		z[i] = 10*t[i]^2/2
+	z_exact = similar(t)
+	z_exact[1] = 0.0
+	for i in 2:length(z)
+		z_exact[i] = 10*t[i]^2/2
 	end
 end
 
 # ╔═╡ 6afbfcf5-d0ed-484a-85df-9629f9d731f4
 begin
-	plot(t, z_vstart, label="vstart")
-	plot!(t, z_vmid, label="vmid")
-	plot!(t, z_vave, label="vave")
-	plot!(t, z, label="exact")
+	plot(t, z, label="computer")
+	plot!(t, z_exact, label="exact")
 	plot!(title="distance vs time",xlabel="time [s]",ylabel="distance [m]")
 end
 
 # ╔═╡ 06d74ac5-4a08-4212-afac-1f6153608217
 md"""
-Three of the plot lines lie on top of each other. You can see which is which by commenting out one or more of the `plot` commands.
+The plot lines lie on top of each other. You can see which is which by commenting out the `plot!` command.
+
+Another option is to thicken the lines and make one dashed or dotted, so portions of the underlying line are visible:
 """
+
+# ╔═╡ 8af6d8c1-207b-4281-9152-f6d16ab082f8
+begin
+	plot(t, z, lw=5,label="computer")
+	plot!(t, z_exact, lw=5,linestyle=:dash, label="exact")  # thick line width
+	plot!(title="distance vs time",xlabel="time [s]",ylabel="distance [m]")
+end
 
 # ╔═╡ a9409040-77ea-442f-89c5-a5f7636b3e56
 md"""
->Question: Which approach(s) for calculating the distance is the most accurate?
+> 🤔 Question: What can we conclude by the agreement of the exact and computer (or numerical approximation)?
 >
->Answer:
->
-> Question: Experiment with decreasing Δt (and remembering to increase `nmax` so that the final time remains the same). What happens to the accuracy of the least accurate approach?
->
-> Answer:
+> Answer: Our midpoint method of updating the distance fallen is pretty accurate, which we hoped or expected to be the case based on our earlier work.
 """
 
 # ╔═╡ 16b85f25-b033-47f0-a9a9-e92ae0ad97de
@@ -303,16 +388,16 @@ if ``\Delta t \rightarrow 0``.
 Our time intervals are not **infinitesimally small**, so this becomes another approximation. And unfortunately, ``f`` depends on speed, so it is *not constant* over a time interval.
 """
 
-# ╔═╡ c72fe0c7-c08a-4447-a727-612717c67e11
-md"""
-Learning from the distance study above, it looks reasonable to find the change in speed in an interval using the speed in the *middle* of the interval. So what we are doing is
-1. Stepping forward a half interval, and then using that to
-2. Step forward the whole interval.
-"""
-
 # ╔═╡ 930a4dff-f3ca-4817-9bd7-ef5c1d476431
 md"""
 ## Computer experiments
+"""
+
+# ╔═╡ c72fe0c7-c08a-4447-a727-612717c67e11
+md"""
+So now we have a situation where the quantitites that determine change of speed *and* distance vary over a time interval. Again, it looks reasonable to find the change in speed in an interval using the middle of the interval. So what we are doing is
+1. Stepping forward a half interval, and then using that to
+2. Step forward the whole interval.
 """
 
 # ╔═╡ ea8c0bb9-c6bf-4be5-a582-f637de2bfa15
@@ -330,20 +415,35 @@ Parameters:
 # ╔═╡ 7a7b5329-582a-467b-a797-711e63e11966
 function Δv_friction(v₀, Δt, g=10.0; mass=0.145, C_d=0.346, ρ=1.225, A=0.0043)
 	f = C_d*ρ*A*v₀^2 / 2
-	-(f/mass)*Δt
+	-(f/mass)*Δt  # change of speed with be negative
 end
+
+# ╔═╡ 460d765a-8d9a-4e64-8077-d6437d96fc94
+md"""
+> ☡ Coding note: This is a function with an argument that has a default value *and* a set of **key values** (after the ;). With a long list of arguments like this, it's easy to forget the order. You would need to constantly go back and look. With key values, you set them by actually specifying, for example, `C_d=0.25`. You can do more than one, and the order does not matter.
+"""
 
 # ╔═╡ 1c5586ea-9177-49a0-ab97-17b76b45b834
 md"""
 To see the effects of friction more easily, we'll need to consider longer times. Let's recalculate the time grid from above. Try `nmax = 100` and `Δt = 0.2`.
 """
 
+# ╔═╡ 0ed54556-d093-4d2c-8eae-f56fa6a5ce41
+md"""
+Over a time interval, we now have two processes that will change the speed, so we'll need to include them both.
+"""
+
+# ╔═╡ f510fd53-ffa0-46f4-a307-692eac7a2026
+function Δv_tot(v₀, Δt, g=10.0)
+	return Δv_grav(Δt) + Δv_friction(v₀, Δt)
+end
+
 # ╔═╡ 9fa851b8-cc2b-4e5d-b363-f97bf096383a
 begin
-	v[1] = 0.0
+	v[1] = 0.0  # initial speed
 	for i in 2:length(v)
-		v_halfstep = v[i-1] + ( Δv_grav(Δt/2) + Δv_friction(v[i-1], Δt/2) )
-		v[i] = v[i-1] + ( Δv_grav(Δt) + Δv_friction(v_halfstep, Δt) )
+		v_halfstep = v[i-1] + ( Δv_tot(v[i-1], Δt/2) )
+		v[i] = v[i-1] + ( Δv_tot(v_halfstep, Δt) )
 	end
 end
 
@@ -360,34 +460,91 @@ Notice that the speed behaves differently than with no friction. It approaches a
 Note also that without a computer experiment, it would not be possible to find the terminal speed without calculus.
 """
 
-# ╔═╡ 01d90dbf-b9ea-4daa-8141-022e974bdbed
+# ╔═╡ 1fc05c12-1539-4d11-b09c-e452ac6445ba
 md"""
->Question: Experiment with changing ``\Delta t`` (and increasing the number of grid points to keep the final time the same). What happens to the value of the terminal speed? 
+> 🤔 Question: Experiment with changing ``\Delta t`` (and increasing the number of grid points to keep the final time the same). What happens to the value of the terminal speed?
 >
->Answer:
+> Answer:
 """
 
-# ╔═╡ f8a963e7-272f-4c01-86c2-ad09e5f90884
+# ╔═╡ 906dc119-bbfb-4504-81cf-7d815e7b2f33
 md"""
-As an aside, we can continue with our practice of encapsulating code within functions (which we partially departed from in the last calculation).
-
-Here's an example of how to do it.
+Let's now look at the distance fallen. We'll find the distance in a time interval using the speed at the midpoint.
 """
 
-# ╔═╡ 4656fd48-7908-4c12-9117-4bf8a9e40a9a
-function v_update!(v, Δt, Δv_grav::Function, Δv_friction::Function)
-	for i in 2:length(v)
-		v_halfstep = v[i-1] + ( Δv_grav(Δt/2) + Δv_friction(v[i-1], Δt/2) )
-		v[i] = v[i-1] + ( Δv_grav(Δt) + Δv_friction(v_halfstep, Δt) )
+# ╔═╡ be91e70f-1b59-483d-9479-13e87a7d11ee
+function Δz_tot(v₀, Δv::Function, Δt)
+	v_mid = v₀ + ( Δv(v₀, Δt/2) )
+	return v_mid*Δt
+end
+
+# ╔═╡ 28f70f01-c7fa-4c24-8dde-d922483978d0
+begin
+	z_tot = similar(t)
+	z_tot[1] = 0.0
+	for i in 2:length(z_tot)
+		z_tot[i] = z_tot[i-1] + Δz_tot(v[i-1], Δv_tot, Δt)
 	end
 end
 
-# ╔═╡ e60f5c16-f960-4c33-b966-4aa96b62ea84
+# ╔═╡ f536139b-9e88-41e5-9674-68e22e036304
 begin
-	v_update!(v, Δt, Δv_grav, Δv_friction)
-	plot(t,v,label="v")
-	plot!(title="With air friction",xlabel="time [s]",ylabel="speed [m/s]")
+	plot(t,z_tot,label="z",xlabel="time [s]",ylabel="distance [m]")
+	plot!(t,z_exact,label="no friction")
 end
+
+# ╔═╡ deca124e-6eef-4888-a54e-56b7807aecef
+md"""
+We see that friction, as expected, slows the object down, so that it won't fall as far in a time interval.
+"""
+
+# ╔═╡ 159e2507-4f38-411e-81a7-392e38da43e0
+md"""
+# Functions in Julia
+"""
+
+# ╔═╡ a356aab9-1dff-496d-95ba-d317c6e4cb28
+md"""
+Let's suppose we have a function that we need to code. Julia gives us a couple of different different ways to to this.
+
+As an example, take the function to be ``x^2 + 3x``.
+"""
+
+# ╔═╡ e62dd0b7-8660-4276-b0bc-a831da48cc87
+md"""
+The first way is the "long" way, which is what we've done so far. This would be the one to use if we have some preliminary calculations to do before returning the result.
+"""
+
+# ╔═╡ 62fc9a17-d10f-48bb-9beb-0bac5f735a49
+function test1(x)
+	return x^2 + 3x
+end
+
+# ╔═╡ eccbfa14-9695-4923-b512-3648ade4eece
+md"""
+By the way, notice the term ``3x``: There is multiplication sign between the three and the ``x``. It's optional when we have a number times a variable.
+
+The second way is to shorten things up. This would be fine if there were no preliminary calculations, such as here. But in the case of the function `Δz` above, where we do have a preliminary calculation for `v_mid`, it would not be good.
+"""
+
+# ╔═╡ b1c06107-f7b2-45f8-bad6-ab2414b9fb9d
+test2(x) = x^2 + 3x
+
+# ╔═╡ 80d4010b-d04a-4f83-90b2-00153453fdc7
+md"""
+The last way is to use an **anonymous** function. This is a function with no name, also good for short functions. The syntax here says ""take an input ``x`` and give back ``x^2 + 3x``.
+"""
+
+# ╔═╡ cfa646a8-0599-435e-86f6-23c3c0947e9e
+x -> x^2 + 3x
+
+# ╔═╡ 5c348a2f-edaf-45fe-a40a-629b616745f6
+md"""
+Here is an example of how it could be used: to plot out an analytical function.
+"""
+
+# ╔═╡ 663b73f8-ac3c-416a-827e-a1240e15a257
+plot([x for x in 1:20], x -> x^2 + 3x,label="function")
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1228,55 +1385,76 @@ version = "0.9.1+5"
 """
 
 # ╔═╡ Cell order:
+# ╟─2c6dd05a-6505-4fb5-8387-66cd4c6f47aa
+# ╟─e9512960-5c44-444f-bb17-cd6fcfcbd640
+# ╟─847f4e0b-cbd7-4151-8c53-face87bf8b6d
 # ╠═449faf07-3214-47b6-bb02-824cf900bc07
 # ╠═2dd2d4e3-14a0-43f1-b207-969b98ee5346
+# ╟─8218aa8a-3614-4ccb-9c3c-a8255a5d5a98
 # ╟─89f1748e-593f-473f-907d-b3a64073e197
 # ╟─f878dcc5-06db-4dd4-8df8-c4666cf8f605
 # ╟─f5e86f2a-076d-11ec-1080-c341c92d3fd1
 # ╟─26f6893e-17ab-48e9-88d0-98a79ec0a1b0
 # ╟─ecb886b8-cf77-4d82-865b-d2af63f22a2e
 # ╟─a3e1ba79-2f26-4ceb-b32d-457d9eef5ef9
+# ╟─63a4ba7f-758e-4326-8d46-c72cb0baee4b
 # ╟─fe7c9f07-10c7-4aa3-b303-211da17ec695
 # ╟─6e215ec5-dafb-4eb0-a159-b9028d6de08d
 # ╟─c87acb83-84e6-484a-bed7-319bdb3d0feb
 # ╟─fcba2327-2306-4fc3-bb70-14e94e5d55c5
 # ╠═809e639a-8492-4b0a-bc98-2226c2404478
-# ╠═dd4a6136-75a7-460d-9bbc-97a374e23a4f
+# ╟─d5309100-0e06-4d81-84bf-17de80b30e51
 # ╠═44762363-cc3e-422a-8044-670bc04b1690
-# ╠═9059e6d7-ad27-4b06-b740-a91b9bc9f349
+# ╟─15622d2e-91e2-483d-8da9-b3b6253499b3
 # ╟─453ad11f-7bed-49f7-8255-6b4e7a86ae57
 # ╠═0e324d7d-932a-41a5-b4e8-924286ed6878
 # ╟─bf58c0d6-1c31-4fcc-b9e6-72058c79d79a
+# ╟─fea74e8b-555c-4fc9-8c34-541da5e978f7
 # ╠═cc9737b7-33ee-48c4-9cbd-dde3f9b28afc
 # ╟─de13ad92-d15f-450a-9388-4e765c29ea66
 # ╠═e59e1646-d949-456d-8e28-a4f9e1f55a8a
 # ╟─421f19c1-38eb-4cff-b8d4-7a6ae4f438d0
 # ╠═a87dd44d-89ca-41cc-b077-d444ea37c48d
 # ╠═becfff3a-b130-44e8-8f9b-f63d693fdc0d
-# ╠═20e80196-d302-44ad-af58-c2c6211bcc95
-# ╟─202922e8-9d1a-4a23-afdc-f91deceb899e
+# ╟─912e1d45-2dd0-4372-87d7-84fde259a266
 # ╟─d98ad456-1f29-4047-8724-78a8cb35187a
 # ╠═bafa445a-f3c8-4e83-bfa7-2b907bd33319
 # ╟─61f10f8b-9f83-45ae-815f-22a86180dcfe
 # ╟─1d0dab51-947d-40f6-a38b-6bf54b1595cf
 # ╠═2f305768-1b2b-4939-926e-dee480da23f1
-# ╠═6afbfcf5-d0ed-484a-85df-9629f9d731f4
+# ╟─6afbfcf5-d0ed-484a-85df-9629f9d731f4
 # ╟─06d74ac5-4a08-4212-afac-1f6153608217
+# ╠═8af6d8c1-207b-4281-9152-f6d16ab082f8
 # ╟─a9409040-77ea-442f-89c5-a5f7636b3e56
 # ╟─16b85f25-b033-47f0-a9a9-e92ae0ad97de
 # ╟─90e92459-1bfa-41b1-a0e1-e9499ef0d3b2
 # ╟─b64d55a2-2272-4fb4-b71c-bc0e4ad0bfff
-# ╟─c72fe0c7-c08a-4447-a727-612717c67e11
 # ╟─930a4dff-f3ca-4817-9bd7-ef5c1d476431
+# ╟─c72fe0c7-c08a-4447-a727-612717c67e11
 # ╟─ea8c0bb9-c6bf-4be5-a582-f637de2bfa15
 # ╠═7a7b5329-582a-467b-a797-711e63e11966
+# ╟─460d765a-8d9a-4e64-8077-d6437d96fc94
 # ╟─1c5586ea-9177-49a0-ab97-17b76b45b834
+# ╟─0ed54556-d093-4d2c-8eae-f56fa6a5ce41
+# ╠═f510fd53-ffa0-46f4-a307-692eac7a2026
 # ╠═9fa851b8-cc2b-4e5d-b363-f97bf096383a
 # ╠═c356c512-565b-4da3-9d77-a12da63d349c
 # ╟─d8331098-d52c-4cd1-90d0-2756d6b6589e
-# ╟─01d90dbf-b9ea-4daa-8141-022e974bdbed
-# ╟─f8a963e7-272f-4c01-86c2-ad09e5f90884
-# ╠═4656fd48-7908-4c12-9117-4bf8a9e40a9a
-# ╠═e60f5c16-f960-4c33-b966-4aa96b62ea84
+# ╟─1fc05c12-1539-4d11-b09c-e452ac6445ba
+# ╟─906dc119-bbfb-4504-81cf-7d815e7b2f33
+# ╠═be91e70f-1b59-483d-9479-13e87a7d11ee
+# ╠═28f70f01-c7fa-4c24-8dde-d922483978d0
+# ╠═f536139b-9e88-41e5-9674-68e22e036304
+# ╟─deca124e-6eef-4888-a54e-56b7807aecef
+# ╟─159e2507-4f38-411e-81a7-392e38da43e0
+# ╟─a356aab9-1dff-496d-95ba-d317c6e4cb28
+# ╟─e62dd0b7-8660-4276-b0bc-a831da48cc87
+# ╠═62fc9a17-d10f-48bb-9beb-0bac5f735a49
+# ╟─eccbfa14-9695-4923-b512-3648ade4eece
+# ╠═b1c06107-f7b2-45f8-bad6-ab2414b9fb9d
+# ╟─80d4010b-d04a-4f83-90b2-00153453fdc7
+# ╠═cfa646a8-0599-435e-86f6-23c3c0947e9e
+# ╠═5c348a2f-edaf-45fe-a40a-629b616745f6
+# ╠═663b73f8-ac3c-416a-827e-a1240e15a257
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
